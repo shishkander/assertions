@@ -1,0 +1,18 @@
+// Copyright 2021 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package gorender.testdata;
+
+option go_package = "github.com/smartystreets/assertions/internal/go-render/render/testdata";
+
+message Msg {
+  int64 i64 = 1;
+  Inner inner = 2;
+}
+
+message Inner {
+  int32 i32 = 1;
+}

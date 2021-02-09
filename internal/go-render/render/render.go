@@ -10,6 +10,10 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"unsafe"
+
+	"google.golang.org/protobuf/encoding/prototext"
+	"google.golang.org/protobuf/proto"
 )
 
 var builtinTypeMap = map[reflect.Kind]string{
@@ -226,7 +230,22 @@ func (s *traverseState) render(buf *bytes.Buffer, ptrs int, v reflect.Value, imp
 			writeType(buf, ptrs, v.Type())
 			buf.WriteString("(nil)")
 		} else {
-			s.render(buf, ptrs, v.Elem(), false)
+			done := false
+			if v.CanAddr() {
+				// If v is an unexported field, v.Interface() will panic,
+				// but the following doesn't: https://stackoverflow.com/a/43918797
+				v1 := reflect.NewAt(v.Type(), unsafe.Pointer(v.UnsafeAddr())).Elem()
+				if m, ok := v1.Interface().(proto.Message); ok {
+					buf.WriteString("<PB(")
+					opts := prototext.MarshalOptions{Multiline: false}
+					buf.WriteString(opts.Format(m))
+					buf.WriteString(")>")
+					done = true
+				}
+			}
+			if !done {
+				s.render(buf, ptrs, v.Elem(), false)
+			}
 		}
 
 	case reflect.Chan, reflect.Func, reflect.UnsafePointer:

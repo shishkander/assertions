@@ -12,6 +12,8 @@ import (
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/smartystreets/assertions/internal/go-render/render/testdata"
 )
 
 func init() {
@@ -182,6 +184,29 @@ func TestRenderImplicitType(t *testing.T) {
 	for _, tc := range tcs {
 		assertRendersLike(t, reflect.TypeOf(tc.in).String(), tc.in, tc.expect)
 	}
+}
+
+type withProto struct {
+	i8 int8
+	msg *testdata.Msg
+	inn *testdata.Inner
+}
+
+func TestRenderStructWithProto(t *testing.T) {
+	w := withProto{
+		i8: 8,
+		msg : &testdata.Msg{
+			Inner: &testdata.Inner{
+				I32: 32,
+			},
+		},
+		inn: &testdata.Inner{
+			I32: -32,
+		},
+	}
+
+	assertRendersLike(t, "Struct with proto", &w,
+		`(*render.withProto){i8:8, msg:<PB(inner:{i32:32})>, inn:<PB(i32:-32)>}`)
 }
 
 func ExampleInReadme() {
